@@ -4,8 +4,9 @@ from django.utils import timezone
 
 class Post(models.Model):
     author = models.ForeignKey('auth.User')
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=50)
     text = models.TextField()
+    category = models.ForeignKey('blog.Category', related_name='posts', default=None)
     created_date = models.DateTimeField(default=timezone.now)
     published_date = models.DateTimeField(blank=True, null=True)
 
@@ -19,6 +20,13 @@ class Post(models.Model):
 
     def posts_liked(self):
         return self.liked.filter(is_liked=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Category(models.Model):
+    title = models.CharField(max_length=50)
 
     def __str__(self):
         return self.title
@@ -45,6 +53,7 @@ class Comment(models.Model):
 
 class Like(models.Model):
     is_liked = models.BooleanField(default=False)
+
 
     def like(self):
         self.is_liked = not self.is_liked

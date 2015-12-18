@@ -3,14 +3,17 @@ from django.utils import timezone
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
-from .models import Post, Comment, PostLike, CommentLike
+from .models import Post, Category, Comment, PostLike, CommentLike
 from .forms import PostForm, CommentForm
 
 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
-    user_posts_pk_liked = request.user.postlikes.filter(is_liked=True).values_list('post', flat=True)
-    context = {'posts': posts, 'user_posts_pk_liked': user_posts_pk_liked}
+    context = None
+    if request.user.is_authenticated():
+            user_posts_pk_liked = request.user.postlikes.filter(is_liked=True).values_list('post', flat=True)
+            context = {'posts': posts, 'user_posts_pk_liked': user_posts_pk_liked}
+
     return render(request, 'blog/post_list.html', context)
 
 
@@ -26,9 +29,9 @@ def post_new(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
+            post = form.save(request.user)
             post.save()
+
             return redirect('blog.views.post_detail', pk=post.pk)
     else:
         form = PostForm()
@@ -81,13 +84,25 @@ def post_remove(request, pk):
     return redirect('blog.views.post_list')
 
 
+@login_required
+def category_post_list(request, pk):
+    category = Category.objects.get(pk=pk)
+    context = {'category': category, 'posts': category.posts.all()}
+    return render(request, 'blog/category_post_list.html', context)
+
+
+@login_required
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'blog/category_list.html', {'categories': categories})
+
+
 def add_comment_to_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
-            comment = form.save(commit=False)
-            comment.post = post
+            comment = form.save(post, request.user)
             comment.save()
             return redirect('blog.views.post_detail', pk=post.pk)
 

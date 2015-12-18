@@ -37,6 +37,17 @@ h1, h2, h3, h4 {
     font-family: 'Mystery Quest';
 }
 
+.category {
+    font-family: 'Tangerine';
+    font-size: 20pt;
+    color: #692c4b;
+}
+
+.categories {
+    font-family: 'Tangerine';
+    font-size: 28pt;
+}
+
 .like {
     float: left;
     text-align: center;
