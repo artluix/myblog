@@ -7,6 +7,10 @@ body {
     padding-left: 15px;
 }
 
+.row {
+    padding-right: 320px;
+}
+
 .page-header {
     background-color: #40d65d;
     margin-top: 0;
@@ -30,6 +34,14 @@ h1, h2, h3, h4 {
 .date {
     float: right;
     color: #828282;
+    font-family: 'Mystery Quest';
+}
+
+.like {
+    float: left;
+    text-align: center;
+    vertical-align: top;
+    margin-right: 5px;
 }
 
 .save {
@@ -43,8 +55,9 @@ h1, h2, h3, h4 {
 .top-menu, .top-menu:hover, .top-menu:visited {
     color: #ffffff;
     float: right;
-    font-size: 26pt;
+    font-size: 20pt;
     margin-right: 20px;
+    font-family: "Satisfy";
 }
 
 .post {

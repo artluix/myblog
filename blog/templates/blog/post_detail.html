@@ -8,9 +8,13 @@
                 </div>
             {% else %}
                 <a class="btn btn-default" href="{% url 'blog.views.post_publish' pk=post.pk %}">Publish</a>
-                <a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                <a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}">
+                    <span class="glyphicon glyphicon-remove"></span>
+                </a>
             {% endif %}
-            <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">
+                    <span class="glyphicon glyphicon-pencil"></span>
+                </a>
             <h1>{{ post.title }}</h1>
             <p>{{ post.text|linebreaks }}</p>
         </div>
@@ -19,6 +23,17 @@
         {% for comment in post.comments.all %}
             {% if user.is_authenticated or comment.approved_comment %}
                 <div class="comment">
+                    {% if comment.pk in user_comments_pk_liked %}
+                        <a class="btn btn-circle like" href="{% url 'comment_like' pk=comment.pk %}">
+                            <span class="glyphicon glyphicon-heart"></span>
+                            {{ comment.comments_liked.count }}
+                        </a>
+                    {% else %}
+                        <a class="btn btn-circle like" href="{% url 'comment_like' pk=comment.pk %}">
+                            <span class="glyphicon glyphicon-heart-empty"></span>
+                            {{ comment.comments_liked.count }}
+                        </a>
+                    {% endif %}
                     <div class="date">
                         {{ comment.created_date }}
                         {% if not comment.approved_comment %}
@@ -34,7 +49,7 @@
                     <p>{{ comment.text|linebreaks }}</p>
                 </div>
             {% endif %}
-            {% empty %}
-                <p>No comments here yet :(</p>
+        {% empty %}
+            <p>No comments here yet :(</p>
         {% endfor %}
     {% endblock %}

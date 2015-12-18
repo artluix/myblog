@@ -3,20 +3,25 @@ from django.utils import timezone
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
-from .models import Post, Comment
+from .models import Post, Comment, PostLike, CommentLike
 from .forms import PostForm, CommentForm
 
 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    user_posts_pk_liked = request.user.postlikes.filter(is_liked=True).values_list('post', flat=True)
+    context = {'posts': posts, 'user_posts_pk_liked': user_posts_pk_liked}
+    return render(request, 'blog/post_list.html', context)
 
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    return render(request, 'blog/post_detail.html', {'post': post})
+    user_comments_pk_liked = request.user.commentlikes.filter(is_liked=True).values_list('comment', flat=True)
+    context = {'post': post, 'user_comments_pk_liked': user_comments_pk_liked}
+    return render(request, 'blog/post_detail.html', context)
 
 
+@login_required
 def post_new(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
@@ -27,10 +32,11 @@ def post_new(request):
             return redirect('blog.views.post_detail', pk=post.pk)
     else:
         form = PostForm()
-    
+
     return render(request, 'blog/post_edit.html', {'form': form})
 
 
+@login_required
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method == 'POST':
@@ -43,21 +49,32 @@ def post_edit(request, pk):
             return redirect('blog.views.post_detail', pk=post.pk)
     else:
         form = PostForm(instance=post)
-    
+
     return render(request, 'blog/post_edit.html', {'form': form})
 
 
+@login_required
+def post_like(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    postlike, created = PostLike.objects.get_or_create(post=post, author=request.user)
+    postlike.like()
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+@login_required
 def post_draft_list(request):
     posts = Post.objects.filter(published_date__isnull=True).order_by('created_date')
     return render(request, 'blog/post_draft_list.html', {'posts': posts})
 
 
+@login_required
 def post_publish(request, pk):
     post = get_object_or_404(Post, pk=pk)
     post.publish()
     return redirect('blog.views.post_detail', pk=post.pk)
 
 
+@login_required
 def post_remove(request, pk):
     post = get_object_or_404(Post, pk=pk)
     post.delete()
@@ -75,7 +92,7 @@ def add_comment_to_post(request, pk):
             return redirect('blog.views.post_detail', pk=post.pk)
 
     else:
-        form=CommentForm()
+        form = CommentForm(initial={'author': request.user})
     return render(request, 'blog/add_comment_to_post.html', {'form': form})
 
 
@@ -92,3 +109,10 @@ def comment_remove(request, pk):
     post_pk = comment.post.pk
     comment.delete()
     return redirect('blog.views.post_detail', pk=post_pk)
+
+@login_required
+def comment_like(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    commentlike, created = CommentLike.objects.get_or_create(comment=comment, author=request.user)
+    commentlike.like()
+    return redirect(request.META.get('HTTP_REFERER'), pk=comment.post.pk)
